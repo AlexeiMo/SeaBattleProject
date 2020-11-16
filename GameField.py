@@ -3,19 +3,17 @@ class GameField:
     Class which realizes "Sea battle" game field
     """
 
-    def __init__(self, cell_states: dict):
+    def __init__(self, cell_states: list):
         """
         Constructor.
 
-        Initialize a `cell_states` field which is `dictionary`
-            which keys are numbers of rows (as a `string`)
-            and values are also `dictionaries`(which represents
-            certain rows of field). In its turn, rows keys are
-            string literals (from "abcdefghj") and values are
-            `bool`s ('True' or 'False') which represents state
+        Initialize a `cell_states` field which is `list`
+            which values are also `list`s (which represents
+            certain rows of field). In its turn, rows values are
+            `bool`s ('True' or 'False') which represents state of
             certain cell (was it shot or not).
 
-        :param cell_states: dictionary of dictionaries
+        :param cell_states: list of lists
             of cell states
         """
         self.cell_states = cell_states
@@ -33,7 +31,7 @@ class GameField:
 
     def shoot_cell(self, cords: tuple) -> None:
         """
-        Set the state of shot cell to `False` if it's `True`
+        Set the state of shot cell to `True` if it's `False`
         :param cords: coordinates of cell
         """
         x, y = cords    # x is number, y is letter
