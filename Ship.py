@@ -37,3 +37,11 @@ class Ship:
         :return: `int` which is number of unbroken ship parts
         """
         return len(self.ship_cords)
+
+    def get_ship_cords(self) -> list:
+        """
+        Return `ship coordinates`
+
+        :return: `list` of ship coordinates
+        """
+        return self.ship_cords

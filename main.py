@@ -41,11 +41,7 @@ def generate_ships() -> list:
 
     :return: list of `Ship` objects
     """
-    field = list()
-    for i in range(10):
-        field.append([])
-        for j in range(10):
-            field[i].append(0)  # init field with empty cells
+    field = create_empty_field()
 
     length = 4  # initial length (we'll start from 4-unit ship)
     ship_count = 1  # initial quantity of ships of `length` (at start we want to build 1 4-unit ship)
@@ -58,17 +54,17 @@ def generate_ships() -> list:
         y = random.randint(0, 9)  # get random y coordinate of head of ship
         direction = random.randint(1, 2)  # 1 - vertical, 2 - horizontal
 
-        x_limit = x + length if direction == 1 else x + 1
-        y_limit = y + length if direction == 2 else y + 1
+        x_limit = get_x_limit(direction, length, x)
+        y_limit = get_y_limit(direction, length, y)
 
         if (direction == 1 and x + length > 10) or (direction == 2 and y + length > 10):  # if ship will be out of range
             continue
         for i in range(x, x_limit):
             for j in range(y, y_limit):
-                start_pos_x = i - 1 if i > 0 else i
-                start_pos_y = j - 1 if j > 0 else j
-                end_pos_x = i + 1 if i < 9 else i
-                end_pos_y = j + 1 if j < 9 else j
+                start_pos_x = get_start_position(i)
+                start_pos_y = get_start_position(j)
+                end_pos_x = get_end_position(i)
+                end_pos_y = get_end_position(j)
                 for k in range(start_pos_x, end_pos_x + 1):
                     for m in range(start_pos_y, end_pos_y + 1):
                         if field[k][m] == 1:
@@ -85,10 +81,7 @@ def generate_ships() -> list:
         else:
             ship_cords = []
 
-            for i in range(x, x_limit):
-                for j in range(y, y_limit):
-                    field[i][j] = 1
-                    ship_cords.append((i, j))
+            update_field(field, ship_cords, x, x_limit, y, y_limit)
 
             ships_to_generate.append(Ship(ship_cords))
 
@@ -101,23 +94,55 @@ def generate_ships() -> list:
     return ships_to_generate
 
 
-if __name__ == "__main__":
-    ships = generate_ships()
-    local_ships = list(ships)
-    killed_ships = 0
-    killed_ship_parts = []
+def update_field(field, ship_cords, x, x_limit, y, y_limit):
+    for i in range(x, x_limit):
+        for j in range(y, y_limit):
+            field[i][j] = 1
+            ship_cords.append((i, j))
 
-    for ship in ships:
-        print(ship.ship_cords)
 
-    field = []
+def get_y_limit(direction, length, y):
+    y_limit = y + length if direction == 2 else y + 1
+    return y_limit
+
+
+def get_x_limit(direction, length, x):
+    x_limit = x + length if direction == 1 else x + 1
+    return x_limit
+
+
+def get_end_position(index):
+    end_pos = index + 1 if index < 9 else index
+    return end_pos
+
+
+def get_start_position(index):
+    start_pos = index - 1 if index > 0 else index
+    return start_pos
+
+
+def create_empty_field():
+    field = list()
     for i in range(10):
         field.append([])
         for j in range(10):
-            field[i].append(False)
+            field[i].append(0)  # init field with empty cells
+    return field
+
+
+if __name__ == "__main__":
+    ships = generate_ships()
+    local_ships = list(ships)
+    killed_ship_parts = []
+
+    for ship in ships:
+        print(ship.ship_cords)  # TODO: remove after testing
+
+    field = create_empty_field()
 
     gf = GameField(field)
 
+    killed_ships = 0
     while killed_ships < 10:
         print_game_field(gf)
 
@@ -147,20 +172,36 @@ if __name__ == "__main__":
 
             gf.shoot_cell(chosen_cell_cords)
 
+            message = ""
+
             for ship in local_ships:
                 if ship.is_ship_in_cell(chosen_cell_cords):
+
                     ship.destroy_part_of_ship(chosen_cell_cords)
                     if ship.get_ship_health() == 0:
-                        print("You killed the ship")
+                        message = "You killed the ship"
                         killed_ships += 1
                         local_ships.remove(ship)
+
+                        for killed_ship in ships:
+                            if killed_ship.is_ship_in_cell(chosen_cell_cords):
+                                for x, y in killed_ship.get_ship_cords():
+                                    start_pos_x = get_start_position(x)
+                                    start_pos_y = get_start_position(y)
+                                    end_pos_x = get_end_position(x)
+                                    end_pos_y = get_end_position(y)
+                                    for i in range(start_pos_x, end_pos_x + 1):
+                                        for j in range(start_pos_y, end_pos_y + 1):
+                                            cords = i, j
+                                            gf.shoot_cell(cords)
                     else:
-                        print("You hit the ship")
+                        message = "You hit the ship"
+
                     killed_ship_parts.append(chosen_cell_cords)
                     break
             else:
-                print("You loose")
+                message = "You miss"
 
-            if len(ships) == 0:
-                print("You win!!!")
-                break
+            print(message)
+    else:
+        print("You win!!!")
